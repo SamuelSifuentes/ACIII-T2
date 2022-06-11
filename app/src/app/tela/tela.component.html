@@ -1,1 +1,104 @@
-<p>tela works!</p>
+<div class="vh-100 vw-100 m-0 d-flex  justify-content-center align-items-center p-5">
+
+    <div class="col p-5">
+        <div class="d-flex row ">
+            <!-- Intruçoes -->
+
+
+            <div class="p-1 col border m-4" style="min-width: 100px; min-height:100px; ">
+                <form action="#" class="row m-0" [formGroup]="InstrucaoForm">
+                    <div>
+                        Instrucao:
+                        <select (change)="alteracaoIntrucao()" formControlName="instrucao" name="" id="">
+                            <option *ngFor="let item of instrucoes" [value]="item.id">{{item.valor}}</option>
+                        </select>
+                    </div>
+                    <div *ngIf="entradas>0">
+                        Endereço de Saida:
+                        <select  formControlName="endereco" name="" id="">
+                            <option *ngFor="let item of enderecos" [value]="item">{{item}}</option>
+                        </select>
+                    </div>
+                    <div *ngIf="entradas>0">
+                        Valor1:
+                        <select  formControlName="v1" name="" id="">
+                            <option *ngFor="let item of enderecos" [value]="item">{{item}}</option>
+                        </select>
+                    </div>
+                    <div  *ngIf="entradas>1">
+                        Valor2:
+                        <select formControlName="v2" name="" id="">
+                            <option *ngFor="let item of enderecos" [value]="item">{{item}}</option>
+                        </select>
+                    </div>
+
+                    <button (click)="inserir()" class="btn btn-primary ml-1">
+                        inserir
+                    </button>
+
+                </form>
+                <table>
+                    <tr>
+                        <th>
+                            Intrucao
+                        </th>
+                        <th>
+                            End. Saida
+                        </th>
+                        <th>
+                            V1
+                        </th>
+                        <th>
+                            V2
+                        </th>
+                        <th>
+                            Ciclos
+                        </th>
+                    </tr>
+                    <tr *ngFor="let item of listaComandos">
+                        <td>
+                            {{GetValurInstrucao(item.instrucao)}}
+                        </td>
+                        <td>
+                            {{item.endereco}}
+                        </td>
+                        <td>
+                            {{item.v1}}
+                        </td>
+                        <td>
+                            {{item.v2}}
+                        </td>
+                        <td>
+                            {{item.ciclos}}
+                        </td>
+                    </tr>
+
+                </table>
+            </div>
+            <table>
+
+            </table>
+            <!-- Banco Registradores -->
+            <div class=" p-1 col border m-4" style=" min-width: 100px; min-height:100px;">
+                a
+
+            </div>
+
+        </div>
+        <div class="d-flex row  ">
+            <!-- Reserva -->
+            <div class="p-1 col border m-4" style=" min-width: 100px; min-height:100px;">
+                a
+            </div>
+
+            <!-- Buffer redirecionamento -->
+            <div class="p-1 col border m-4" style=" min-width: 100px; min-height:100px;">
+                a
+            </div>
+
+        </div>
+    </div>
+
+
+
+</div>
