@@ -84,7 +84,7 @@ export class TelaComponent implements OnInit {
   // }
   variavelFucao = 0;
   Executar() {
-    Execute.execute();
+    ExecutionUnit.execute();
     IF.fetch();
     OF.fetch();
 
@@ -115,9 +115,12 @@ class comando {
 }
 class IF {
   static items: comando[] = []
+  static countCommand = 0;
+
   static fetch() {
     this.items = [];
-    this.items.push(comando.listaComandos[0]);
+    this.items.push(comando.listaComandos[IF.countCommand]);
+    IF.countCommand++;
   }
 }
 class OF {
@@ -128,30 +131,36 @@ class OF {
   }
 
   static decode(comando: comando) {
-    switch (Number(comando.Instrucao)) {
+    let instrucao = Number(comando.Instrucao);
+    switch (true) {
 
-      case 2 || 6 || 7:
-        OF.fetchADDILS(comando)
+      case instrucao == 2 || instrucao == 7:
+        OF.fetchADDIL(comando)
+        break;
+      
+      case instrucao == 6:
+        OF.fetchStore(comando)
         break;
 
       default:
         OF.fetchDefault(comando)
         break;
     }
+
     comando.dec = true;
 
     switch ((Number(comando.Instrucao))) {
       //Store
       case 6:
-        store.janela.push(comando)
+        StoreUnit.janela.push(comando)
         break;
       //Load
       case 7:
-        load.janela.push(comando)
+        LoadUnit.janela.push(comando)
         break;
       //Branch
       case 8:
-        Branch.janela.push(comando)
+        BranchUnit.janela.push(comando)
         break;
       //ALU
       default:
@@ -160,29 +169,50 @@ class OF {
     }
   }
 
-  static fetchADDILS(comando: comando) {
+  static fetchADDIL(comando: comando) {
     var r1 = new idRegistrador(comando.v1)
+
     comando.Vv1 = Registrador.get(r1.tipo, r1.pos)
   }
+
+  static fetchStore(comando: comando){
+    var reg = new idRegistrador(comando.dest);
+
+    comando.Vv1 = Registrador.get(reg.tipo, reg.pos);
+  }
+
   static fetchDefault(comando: comando) {
     var r1 = new idRegistrador(comando.v1)
     var r2 = new idRegistrador(comando.v2)
+
     comando.Vv1 = Registrador.get(r1.tipo, r1.pos)
     comando.Vv2 = Registrador.get(r2.tipo, r2.pos)
   }
+
 }
-class Execute {
+
+class ExecutionUnit {
   public static execute() {
     ALU.execute()
-    Branch.execute()
-    store.execute()
-    load.execute()
+    BranchUnit.execute()
+    StoreUnit.execute()
+    LoadUnit.execute()
   }
 }
+
 class ALU {
   static janela: comando[] = [];
   public static execute() {
+    for(let i = 0 ; i < ALU.janela.length; i++){
+      if(ALU.janela[i].exe == true) // Se item já tiver sido executado, remova-o da lista de comandos
+        ALU.janela.splice(i, 1);
+    }
+
     var item = ALU.janela[0];
+
+    if(item == undefined)
+      return; // Retorna se a lista estiver vazia
+
     switch (Number(item.Instrucao)) {
       case 1:
         item.destV = ALU.ADD(item.dest, item.Vv1, item.Vv2)
@@ -200,50 +230,92 @@ class ALU {
         item.destV = ALU.DIV(item.dest, item.Vv1, item.Vv2)
         break;
     }
+
+    item.exe = true;
   }
+  
   static ADD(saida, v1, v2) {
     var reg = new idRegistrador(saida)
-    var res = v1 + v2
+    var res = Number(v1) + Number(v2)
     Registrador.set(reg, res)
     return res
   }
+
   static SUB(saida, v1, v2) {
     var reg = new idRegistrador(saida)
-    var res = v1 - v2
+    var res = Number(v1) - Number(v2)
     Registrador.set(reg, res)
     return res
   }
+
   static MUL(saida, v1, v2) {
     var reg = new idRegistrador(saida)
-    var res = v1 * v2
+    var res = Number(v1) * Number(v2)
     Registrador.set(reg, res)
     return res
   }
+
   static DIV(saida, v1, v2) {
     var reg = new idRegistrador(saida)
-    var res = v1 / v2
+    var res = Number(v1) / Number(v2)
     Registrador.set(reg, res)
     return res
   }
 }
-class Branch {
+
+class BranchUnit {
   static janela: comando[] = [];
   public static execute() {
-
+    // nn faco ideia do que por aqui
+    // ideias: skippar ou voltar para posicao tal no array de comandos original
   }
 }
-class store {
+
+class StoreUnit {
   static janela: comando[] = [];
   public static execute() {
+    for(let i = 0 ; i < StoreUnit.janela.length; i++){
+      if(StoreUnit.janela[i].exe == true) // Se item já tiver sido executado, remova-o da lista de comandos
+        StoreUnit.janela.splice(i, 1);
+    }
 
+    var item = StoreUnit.janela[0];  // Seleciona o comando
+
+    if(item == undefined)
+      return; // Retorna se lista estiver vazia
+
+    var reg = new idRegistrador(item.v1) // Obtem informações de onde o valor será escrito na memória
+    var value = Registrador.get(reg.tipo, reg.pos);
+
+    Memoria.store(item.Vv1, reg.offset, value); // Escreve o valor de v1 na memória
+
+    item.exe = true; // Indica que a instrução finalizou sua fase de execução
   }
 }
-class load {
+
+class LoadUnit {
   static janela: comando[] = [];
   public static execute() {
+    for(let i = 0 ; i < LoadUnit.janela.length; i++){
+      if(LoadUnit.janela[i].exe == true) // Se item já tiver sido executado, remova-o da lista de comandos
+        LoadUnit.janela.splice(i, 1);
+    }
 
+    var item = LoadUnit.janela[0]; // Seleciona o comando
+
+    if(item == undefined)
+      return; // Retorna se lista estiver vazia
+
+    var reg = new idRegistrador(item.v1) // Obtem informacoes de onde o valor será lido
+    var value = Memoria.load(reg.offset, reg.pos) // Obtem o valor a ser escrito no registrador desejado
+    var saida = new idRegistrador(item.dest); // Obtem informacoes do registrador em que o dado será escrito
+
+    Registrador.set(saida, value); // Carrega o dado no registrador desejado
+
+    item.exe = true; // Indica que a instrução finalizou sua fase de execução
   }
 }
+
 class Instrucao {
 
   constructor(
@@ -266,30 +338,6 @@ class Instrucao {
     return Instrucoes;
   }
   
-  
-  static SW(saida, v1) {
-    var a = String(v1).split('(');
-    var offset = a[0];
-    var pos1 = Number(String(a[1]).substring(1, a[1].length - 1));
-    var tipo1 = String(a[1]).charAt(0)
-
-    var posSaida = Number(String(saida).substring(1));
-    var tipoSaida = String(saida).charAt(0)
-    var valor = Registrador[`enderecos${tipoSaida}`][posSaida].valor;
-    var y = Registrador[`enderecos${tipo1}`][pos1].valor
-    Memoria.mem[Number(offset)][y] = valor;
-  }
-  static LW(saida, v1) {
-    var a = String(v1).split('(');
-    var offset = a[0];
-    var pos1 = Number(String(a[1]).substring(1, a[1].length - 1));
-    var tipo1 = String(a[1]).charAt(0)
-    var y = Registrador[`enderecos${tipo1}`][pos1].valor
-    var posSaida = Number(String(saida).substring(1));
-    var tipoSaida = String(saida).charAt(0)
-    var valor = Memoria.mem[Number(offset)][y]
-    Registrador[`enderecos${tipoSaida}`][posSaida].valor = valor;
-  }
   static BEQ(saida, v1, v2) {
     var pos1 = Number(String(v1).substring(1));
     var tipo1 = String(v1).charAt(0)
@@ -332,6 +380,7 @@ class Registrador {
   }
 
 }
+
 class idRegistrador {
   tipo;
   pos;
@@ -339,7 +388,7 @@ class idRegistrador {
   constructor(id) {
     if (String(id).includes('(')) {
       var a = String(id).split('(');
-      this.offset = a[0];
+      this.offset = Number(a[0]);
       this.pos = Number(String(a[1]).substring(1, a[1].length - 1));
       this.tipo = String(a[1]).charAt(0)
     } else {
@@ -349,8 +398,10 @@ class idRegistrador {
 
   }
 }
+
 class Memoria {
   public static mem: number[][];
+
   public static preencher() {
     Memoria.mem = []
     for (let i = 0; i < 16; i++) {
@@ -361,5 +412,13 @@ class Memoria {
       Memoria.mem.push(linha);
     }
     console.log(Memoria.mem)
+  }
+
+  public static store(valor: number, offset: number, linha: number){
+    Memoria.mem[linha][offset] = valor;
+  }
+
+  public static load(offset: number, linha: number){
+    return Memoria.mem[linha][offset];
   }
 }
