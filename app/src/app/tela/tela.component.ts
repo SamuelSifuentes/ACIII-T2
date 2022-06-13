@@ -213,6 +213,9 @@ class OF {
     var isAvailable:boolean = true;
     
     var commandBlock = ALU.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
+    // commandBlock = commandBlock || StoreUnit.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
+    // commandBlock = commandBlock || LoadUnit.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
+    // commandBlock = commandBlock || BranchUnit.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
     
     if(commandBlock)
       isAvailable = false;
@@ -222,8 +225,12 @@ class OF {
 
   static checkDest(reg:idRegistrador){
     var isAvailable:boolean = true;
+
     var dest = `${reg.tipo}${reg.pos}`;
     var commandBlock = ALU.janela.find(x => (x.v1 == dest || x.v2 == dest))
+    // commandBlock = commandBlock || StoreUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
+    // commandBlock = commandBlock || LoadUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
+    // commandBlock = commandBlock || BranchUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
 
     if(commandBlock)
       isAvailable = false;
@@ -425,6 +432,17 @@ class WriteBack{
       comando.wb = true;
     })    
   }
+}
+
+class BufferReorder{
+  private static regQueue:idRegistrador[] // talvez uma nova classe pq vai ter renomeamento
+
+  public static enqueue(reg:idRegistrador){
+    this.regQueue.push(reg);
+  }
+
+  public static
+
 }
 
 class Instrucao {
