@@ -1,230 +1,306 @@
-<div class=" vh-100 vw-100 m-0 d-flex  justify-content-center align-items-center p-5">
-
-    <div class="col p-5">
-        <div class="d-flex row ">
-            <!-- Intruçoes -->
+<div class=" vh-100 vw-100 m-0 d-flex justify-content-center align-items-center p-5">
 
 
-            <div class=" col m-4" style="min-width: 100px; min-height:400px; ">
-                <form action="#" class="row  m-0  p-2 align-items-center " [formGroup]="InstrucaoForm">
-                    <div class="col">
-                        <div >
-                            Instrucao:
-                            <select (change)="alteracaoIntrucao()"   formControlName="Instrucao" name="" id="">
-                                <option *ngFor="let item of Instrucoes" [value]="item.id">{{item.valor}}</option>
-                            </select>
+    <div>
+        <div>
+            <h1>Simulador</h1>
+        </div>
+        <div class=" border rounded px-5 pt-4 pb-5 shadow-lg">
+            <div class="d-flex justify-content-between ">
+                <button (click)="Reset()" class="btn  btn-primary border ">
+                    Resetar
+                </button>
+                <button (click)="Executar()" class="btn  btn-primary border ">
+                    EXECUTAR
+                </button>
+
+            </div>
+            <div class=" d-flex justify-content-center ">
+                <div style="width: 250px; height: 400px;" class="border shadow p-4 m-4">
+                    <H5>Inserir Instruções</H5>
+                    <form action="#" class="row  m-0   align-items-center " [formGroup]="InstrucaoForm">
+                        <div class="">
+                            <div>
+                                <p class="mb-0">Instrução:</p>
+                                <select (change)="alteracaoIntrucao()" formControlName="Instrucao" name="" id="">
+                                    <option *ngFor="let item of Instrucoes" [value]="item.id">{{item.valor}}</option>
+                                </select>
+                            </div>
+                            <div *ngIf="entradas>0">
+                                <p class="mb-0">V0</p>
+                                <input formControlName="dest" type="text">
+                            </div>
+                            <div *ngIf="entradas>0">
+                                <p class="mb-0">V1:</p>
+                                <input formControlName="v1" type="text">
+                            </div>
+                            <div *ngIf="entradas>1">
+                                <p class="mb-0">V2:</p>
+                                <input formControlName="v2" type="text">
+                            </div>
+                            <div>
+
+                                <button *ngIf="entradas>0" (click)="inserir()" class="btn btn-primary border mt-2 ">
+                                    Adicionar
+                                </button>
+
+
+                            </div>
                         </div>
-                        <div *ngIf="entradas>0">
-                            Endereço de Saida:
-                            <input formControlName="dest" type="text">
-                            <!-- <select  formControlName="endereco" name="" id="">
-                                <option *ngFor="let item of enderecos" [value]="item">{{item}}</option>
-                            </select> -->
-                        </div>
-                        <div *ngIf="entradas>0">
-                            Valor1:
-                            <input formControlName="v1" type="text">
-                            <!-- <select  formControlName="v1" name="" id="">
-                                <option *ngFor="let item of enderecos" [value]="item">{{item}}</option>
-                            </select> -->
-                        </div>
-                        <div  *ngIf="entradas>1">
-                            Valor2:
-                            <input formControlName="v2" type="text">
-                            <!-- <select formControlName="v2" name="" id="">
-                                <option *ngFor="let item of enderecos" [value]="item">{{item}}</option>
-                            </select> -->
-                        </div>
-                        <div>
+
+
+
+
+                    </form>
+                </div>
+                <div>
+                    <div class="d-flex justify-content-center mb-4 ">
+                        <div class="p-3 shadow">
+                            <div class="d-flex justify-content-between mb-1">
+                                <H5>Instruções inseridas</H5>
+                                <button (click)="limpar()" class="btn ml-3 btn-primary border ">
+                                    limpar
+                                </button>
+                            </div>
                             
-                    <button (click)="inserir()" class="btn btn-primary border ml-1 py-0 px-1">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                    <!-- <button (click)="limpar()" class="btn ml-3 btn-primary border ml-1 py-0 px-1">
-                        limpar
-                    </button> -->
-                    <button  (click)="Executar()"  class="btn ml-3 btn-primary border ml-1 py-0 px-1">
-                        EXECUTAR
-                    </button>
+                            <div class="" style="max-height: 300px; overflow-y: auto;  width: fit-content;">
+
+                                <table class="table table-bordered w-auto " style="font-size: 13px;">
+                                    <tr>
+                                        <th class="py-1">
+                                            Instrução
+                                        </th>
+                                        <th class="py-1">
+                                            V0
+                                        </th>
+                                        <th class="py-1">
+                                            V1
+                                        </th>
+                                        <th class="py-1">
+                                            V2
+                                        </th>
+                                        <th class="py-1">
+                                            Ciclos
+                                        </th>
+
+                                    </tr>
+                                    <tr *ngFor="let item of comandos.listaComandos2">
+                                        <td class="py-0 ">
+                                            {{GetValurInstrucao(item.Instrucao)}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.dest}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.v1}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.v2}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.ciclos}}
+                                        </td>
+                                    </tr>
+
+                                </table>
+                            </div>
+                        </div>
+                        <div class="p-3 shadow">
+                            <H5 class="mb-1">Execução</H5>
+                            <div class="" style="max-height: 300px; overflow-y: auto;  width: fit-content;">
+                                <table class="table table-bordered w-auto " style="font-size: 13px;">
+                                    <tr>
+                                        <th class="py-1">
+                                            Instrução
+                                        </th>
+                                        <th class="py-1">
+                                            Ciclos
+                                        </th>
+                                        <th class="py-1">
+                                            Decode
+                                        </th>
+                                        <th class="py-1">
+                                            Execute
+                                        </th>
+                                        <th class="py-1">
+                                            Write-Back
+                                        </th>
+
+                                    </tr>
+                                    <tr *ngFor="let item of comandos.listaComandos">
+                                        <td class="py-0 ">
+                                            {{GetValurInstrucao(item.Instrucao)}} {{item.dest}} {{item.v1}} {{item.v2}}
+                                        </td>
+
+                                        <td class="py-0">
+                                            {{item.ciclos}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.dec}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.exe}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.wb}}
+                                        </td>
+
+                                    </tr>
+
+                                </table>
+                            </div>
+                        </div>
+                        <div class="p-3 shadow">
+                            <h5 class="mb-1"    > Banco de Registradores</h5>
+                            <div class=" d-flex " style="max-height: 300px; overflow-y: auto;  width: fit-content;">
+                                <table class="table table-bordered w-auto " style="font-size: 13px;">
+                                    <tr>
+                                        <th class="py-1">
+                                            Nome
+                                        </th>
+                                        <th class="py-1">
+                                            Valor
+                                        </th>
+                                        <!-- <th  class="py-1">
+                                        QI
+                                    </th> -->
+                                    </tr>
+                                    <tr *ngFor="let item of registradorClass.enderecosR">
+                                        <td class="py-0 ">
+                                            {{item.id}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.valor}}
+                                        </td>
+                                        <!-- <td  class="py-0">
+                                        {{item.qi}}
+                                    </td> -->
+                                    </tr>
+                                </table>
+                                <table class="table table-bordered w-auto mx-1" style="font-size: 13px;">
+                                    <tr>
+                                        <th class="py-1">
+                                            Nome
+                                        </th>
+                                        <th class="py-1">
+                                            Valor
+                                        </th>
+                                        <!-- <th  class="py-1">
+                                        QI
+                                    </th> -->
+                                    </tr>
+                                    <tr *ngFor="let item of registradorClass.enderecosF">
+                                        <td class="py-0 ">
+                                            {{item.id}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.valor}}
+                                        </td>
+                                        <!-- <td  class="py-0">
+                                        {{item.qi}}
+                                    </td> -->
+                                    </tr>
+                                </table>
+                                <table class="table table-bordered w-auto " style="font-size: 13px;">
+                                    <tr>
+                                        <th class="py-1">
+                                            Nome
+                                        </th>
+                                        <th class="py-1">
+                                            Valor
+                                        </th>
+                                        <th class="py-1">
+                                            IsBeingUsed
+                                        </th>
+                                    </tr>
+
+                                    <tr *ngFor="let item of registradorClass.enderecosRN">
+                                        <td class="py-0 ">
+                                            {{item.id}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.valor}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.qi}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <div class="p-3 shadow">
+                            <h5>Memória</h5>
+                            <table class="table table-bordered w-auto " style="font-size: 13px;">
+                                <tr>
+                                    <th class="py-0"></th>
+                                    <th class="py-0" *ngFor="let item of memoria.mem; let i = index">{{i.toString(16)}}
+                                    </th>
+                                </tr>
+                                <tr *ngFor="let item of memoria.mem; let j = index">
+                                    <th class="py-0">{{j.toString(16)}}</th>
+                                    <td class="py-0" *ngFor="let itemi of item">{{itemi}}</td>
+                                </tr>
+
+                            </table>
+
+                        </div>
+                        <div class="p-3 shadow " style="height: 60px">
+                            <h5>Ciclos totais: {{total}}</h5>
+                        </div>
+                        <div class="p-3 shadow">
+                            <h5>Buffer de Reordenação</h5>
+                            <div style="max-height: 350px; overflow-y: auto;  width: fit-content;">
+                                <table class="table table-bordered w-auto " style="font-size: 13px;">
+
+                                    <tr>
+                                        <th class="py-1">
+                                            Antigo
+                                        </th>
+                                        <th class="py-1">
+                                            Atual
+                                        </th>
+                                        <th class="py-1">
+                                            Valor
+                                        </th>
+
+                                    </tr>
+
+
+
+                                    <tr *ngFor="let item of BufferReorder.bufferQueue">
+                                        <td class="py-0 ">
+                                            {{item.originalName}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.rename}}
+                                        </td>
+                                        <td class="py-0">
+                                            {{item.value}}
+                                        </td>
+
+
+                                    </tr>
+
+                                </table>
+                            </div>
+
+
                         </div>
                     </div>
-                    
 
-
-                </form>
-                <div>
-                    <table class="table table-bordered w-auto " style="font-size: 13px;">
-                        <tr>
-                            <th class="py-1">
-                                Intrucao
-                            </th>
-                            <th  class="py-1">
-                                Endereço de Saida
-                            </th>
-                            <th  class="py-1">
-                                V1
-                            </th>
-                            <th  class="py-1">
-                                V2
-                            </th>
-                            <th  class="py-1">
-                                Ciclos
-                            </th>
-                            <th  class="py-1">
-                                Decode
-                            </th>
-                            <th  class="py-1">
-                                Execute
-                            </th>
-                            <th  class="py-1">
-                                Write-Back
-                            </th>
-
-                        </tr>
-                        <tr *ngFor="let item of comandos.listaComandos">
-                            <td  class="py-0 ">
-                                {{GetValurInstrucao(item.Instrucao)}}
-                            </td>
-                            <td  class="py-0"> 
-                                {{item.dest}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.v1}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.v2}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.ciclos}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.dec}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.exe}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.wb}}
-                            </td>
-
-                        </tr>
-    
-                    </table>
                 </div>
-                
-            </div>
 
-            <!-- Banco Registradores -->
-            <div class=" p-1 col m-4" style=" min-width: 100px; min-height:100px;">
-                <div class="d-flex justify-content-start" style="max-height: 300px; overflow-y: scroll;  width: fit-content;">
-                    <table class="table table-bordered w-auto mx-1" style="font-size: 13px;">
-                        <tr>
-                            <th class="py-1">
-                                Nome
-                            </th>
-                            <th  class="py-1">
-                                Valor
-                            </th>
-                            <th  class="py-1">
-                                QI
-                            </th>
-                        </tr>
-                        <tr *ngFor="let item of registradorClass.enderecosR">
-                            <td  class="py-0 ">
-                                {{item.id}}
-                            </td>
-                            <td  class="py-0"> 
-                                {{item.valor}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.qi}}
-                            </td>
-                        </tr>
-                    </table>
-                    <table class="table table-bordered w-auto mx-1" style="font-size: 13px;">
-                        <tr>
-                            <th class="py-1">
-                                Nome
-                            </th>
-                            <th  class="py-1">
-                                Valor
-                            </th>
-                            <th  class="py-1">
-                                QI
-                            </th>
-                        </tr>
-                        <tr *ngFor="let item of registradorClass.enderecosF">
-                            <td  class="py-0 ">
-                                {{item.id}}
-                            </td>
-                            <td  class="py-0"> 
-                                {{item.valor}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.qi}}
-                            </td>
-                        </tr>
-                    </table>
-                    <table class="table table-bordered w-auto mx-1" style="font-size: 13px;">
-                        <tr>
-                            <th class="py-1">
-                                Nome
-                            </th>
-                            <th  class="py-1">
-                                Valor
-                            </th>
-                            <th  class="py-1">
-                                IsBeingUsed
-                            </th>
-                        </tr>
-                        <tr *ngFor="let item of registradorClass.enderecosRN">
-                            <td  class="py-0 ">
-                                {{item.id}}
-                            </td>
-                            <td  class="py-0"> 
-                                {{item.valor}}
-                            </td>
-                            <td  class="py-0">
-                                {{item.qi}}
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                    
+
+
 
             </div>
-
         </div>
-        <!-- <div class="d-flex row  ">
-            Reserva
-            <div class="p-1 col border m-4" style=" min-width: 100px; min-height:100px;">
-                a
-            </div>
 
-            Buffer redirecionamento
-            <div class="p-1 col border m-4" style=" min-width: 100px; min-height:100px;">
-                a
-            </div>
-
-        </div> -->
-        <div class="d-flex row  ">
-            <!-- Reserva -->
-            <div class="p-1 col  m-4" style=" min-width: 100px; min-height:100px;">
-               <table class="table table-bordered w-auto mx-1" style="font-size: 13px;">
-                <tr>
-                    <th  class="py-0" ></th>
-                    <th  class="py-0" *ngFor="let item of memoria.mem; let i = index">{{i.toString(16)}}</th>
-                </tr>
-                <tr *ngFor="let item of memoria.mem; let j = index">
-                    <th  class="py-0" >{{j.toString(16)}}</th>
-                    <td  class="py-0" *ngFor="let itemi of item">{{itemi}}</td>
-                </tr>
-
-               </table>
-            </div>
-
-        </div>
     </div>
+
 
 
 
