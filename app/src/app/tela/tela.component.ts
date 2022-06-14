@@ -207,7 +207,7 @@ class OF {
     comando.Vv1 = OF.getOrBlockReg(r1);
     comando.Vv2 = comando.v2;
     
-    OF.addToBuffer(comando, dest, comando.Vv1!=undefined)
+    OF.addToBuffer(comando, dest, true)
   }
 
   static fetchL(comando: comando) {
@@ -218,7 +218,7 @@ class OF {
     // let newDestination = OF.checkRename(dest);
     // comando.dest = newDestination == dest? comando.dest : newDestination;
 
-    OF.addToBuffer(comando, dest,comando.Vv1!=undefined);
+    OF.addToBuffer(comando, dest, true);
   }
 
   static fetchStore(comando: comando) {
@@ -241,7 +241,7 @@ class OF {
     comando.Vv2 = OF.getOrBlockReg(r2);
     // comando.dest = OF.checkRename(dest)
     
-    OF.addToBuffer(comando, dest,(comando.Vv1!=undefined && comando.Vv2!=undefined))
+    OF.addToBuffer(comando, dest,(true))
   }
   static fetchBranch(comando: comando) {
     var r1 = new idRegistrador(comando.v1)
@@ -344,7 +344,7 @@ class ALU {
   public static execute() {
     let tam = ALU.janela.length
     for (let i = 0; i < tam; i++) {
-      if (ALU.janela[i].exe == true || ALU.janela[i].naoExecutar) // Se item já tiver sido executado, remova-o da lista de comandos
+      if (ALU.janela[i] && (ALU.janela[i].exe == true || ALU.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
         ALU.janela.splice(i, 1);
     }
 
@@ -413,7 +413,7 @@ class BranchUnit {
   public static execute() {
     let tam = BranchUnit.janela.length
     for (let i = 0; i < tam; i++) {
-      if (BranchUnit.janela[i].exe == true || BranchUnit.janela[i].naoExecutar) // Se item já tiver sido executado, remova-o da lista de comandos
+      if (BranchUnit.janela[i] && (BranchUnit.janela[i].exe == true || BranchUnit.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
         BranchUnit.janela.splice(i, 1);
     }
 
@@ -456,7 +456,7 @@ class StoreUnit {
   public static execute() {
     let tam = StoreUnit.janela.length
     for (let i = 0; i < tam; i++) {
-      if (StoreUnit.janela[i].exe == true || StoreUnit.janela[i].naoExecutar) // Se item já tiver sido executado, remova-o da lista de comandos
+      if (StoreUnit.janela[i] && (StoreUnit.janela[i].exe == true || StoreUnit.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
         StoreUnit.janela.splice(i, 1);
     }
 
@@ -488,7 +488,7 @@ class LoadUnit {
   public static execute() {
     let tam = LoadUnit.janela.length
     for (let i = 0; i < tam; i++) {
-      if (LoadUnit.janela[i].exe == true || LoadUnit.janela[i].naoExecutar) // Se item já tiver sido executado, remova-o da lista de comandos
+      if (LoadUnit.janela[i] && (LoadUnit.janela[i].exe == true || LoadUnit.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
         LoadUnit.janela.splice(i, 1);
     }
 
@@ -580,9 +580,12 @@ class BufferReorder {
 
   public static update(comando:comando,par) {
     let i = BufferReorder.bufferQueue.findIndex(x => x.rename ==  new idRegistrador(comando[par]).toString());
-    BufferReorder.bufferQueue[i].value = comando.destV
-    BufferReorder.bufferQueue[i].rename = BufferReorder.bufferQueue[i].originalName
-    comando[par] = BufferReorder.bufferQueue[i].originalName;
+    if(i != -1){
+      BufferReorder.bufferQueue[i].value = comando.destV
+      BufferReorder.bufferQueue[i].rename = BufferReorder.bufferQueue[i].originalName
+      comando[par] = BufferReorder.bufferQueue[i].originalName;
+    }
+
   }
 
   public static renameRegister(dest:idRegistrador){
@@ -590,8 +593,14 @@ class BufferReorder {
     return rename.rename;
   }
   public static removeComand(comando:comando){
-    let i = BufferReorder.bufferQueue.findIndex(x => x.rename ==  new idRegistrador(comando.dest).toString());  
-    BufferReorder.bufferQueue.splice(i,1);
+    let i
+    if(comando.Instrucao != 6)
+      i = BufferReorder.bufferQueue.findIndex(x => x.rename ==  new idRegistrador(comando.dest).toString());
+    else{
+      i = BufferReorder.bufferQueue.findIndex(x => x.rename ==  new idRegistrador(comando.dest).toString());
+    }
+    if(i != -1)
+      BufferReorder.bufferQueue.splice(i,1);
   }
   public static writeToRDB() {
     let canWrite: boolean = true;
