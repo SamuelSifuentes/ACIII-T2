@@ -60,7 +60,7 @@ export class TelaComponent implements OnInit {
         this.InstrucaoForm.get('v1').value,
         this.InstrucaoForm.get('v2').value,
         ciclos,
-        0        
+        0
       )
       comando.listaComandos.push(item);
       localStorage.setItem('listacomandos', JSON.stringify(comando.listaComandos))
@@ -74,7 +74,7 @@ export class TelaComponent implements OnInit {
     var a = this.Instrucoes.find(x => x.id == Cod).valor;
     return a;
   }
-  
+
   // Executar(){
   //   //ADD1|ADD2|MULT|LOAD/STORE
   //   const a  = [
@@ -90,7 +90,7 @@ export class TelaComponent implements OnInit {
     ExecutionUnit.execute();
     IF.fetch();
     OF.fetch();
-    
+
     // var cmd = comando.listaComandos[this.variavelFucao]
 
     // Instrucao.executaInstrucao(cmd);
@@ -125,11 +125,11 @@ class IF {
   static fetch() {
     this.items = [];
     var x = comando.listaComandos[IF.countCommand]
-    if(x){
+    if (x) {
       this.items.push(x);
       IF.countCommand++;
     }
-    
+
   }
 }
 
@@ -143,9 +143,9 @@ class OF {
     });
   }
 
-  static checkDepedencies(comando: comando){
-    
-    
+  static checkDepedencies(comando: comando) {
+
+
     // depedenciaF(0) DepedenciaV(1) NotDep(-1)
   }
 
@@ -173,14 +173,17 @@ class OF {
     comando.dec = true;
 
     OF.pushToRChannel(comando);
-    
+
   }
+
   static fetchADDI(comando: comando) {
     var r1 = new idRegistrador(comando.v1)
+    var dest = new idRegistrador(comando.dest)
 
     comando.Vv1 = OF.getOrBlockReg(r1);
     comando.Vv2 = comando.v2;
-    // comando.dest = checkDest(dest);
+    
+    OF.addToBuffer(comando, dest)
   }
 
   static fetchL(comando: comando) {
@@ -188,15 +191,21 @@ class OF {
     var dest = new idRegistrador(comando.dest)
 
     comando.Vv1 = OF.getOrBlockReg(r1);
-    // comando.dest = checkDest(dest);
+    // let newDestination = OF.checkRename(dest);
+    // comando.dest = newDestination == dest? comando.dest : newDestination;
+
+    OF.addToBuffer(comando, dest);
   }
 
   static fetchStore(comando: comando) {
     var reg = new idRegistrador(comando.dest);
     var operand = new idRegistrador(comando.v1);
-    
+
     comando.Vv1 = OF.getOrBlockReg(reg);
-    // comando.dest = checkDest(operand)
+    // let newDestination = OF.checkRename(operand);
+    // comando.dest = newDestination == operand? comando.dest : newDestination;
+
+    OF.addToBuffer(comando, operand)
   }
 
   static fetchDefault(comando: comando) {
@@ -206,39 +215,59 @@ class OF {
 
     comando.Vv1 = OF.getOrBlockReg(r1);
     comando.Vv2 = OF.getOrBlockReg(r2);
-    // comando.dest = checkDest(operand)
+    // comando.dest = OF.checkRename(dest)
+    
+    OF.addToBuffer(comando, dest)
   }
 
-  static getOrBlockReg(reg:idRegistrador):number{
-    var isAvailable:boolean = true;
-    
-    var commandBlock = ALU.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
-    // commandBlock = commandBlock || StoreUnit.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
-    // commandBlock = commandBlock || LoadUnit.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
-    // commandBlock = commandBlock || BranchUnit.janela.find(x => x.dest == `${reg.tipo}${reg.pos}`)
-    
-    if(commandBlock)
+  // Se o destino de alguma operação de alguma unidade funcional for o mesmo que o operando passado, bloquear, caso contrario, entregar valor do operando requisitado
+  static getOrBlockReg(reg: idRegistrador): number {
+    var isAvailable: boolean = true;
+
+    var regFormatted = `${reg.tipo}${reg.pos}`;
+    var commandBlock = ALU.janela.find(x => x.dest == regFormatted)
+    || StoreUnit.janela.find(x => x.dest == regFormatted)
+    || LoadUnit.janela.find(x => x.dest == regFormatted)
+    || BranchUnit.janela.find(x => x.dest == regFormatted)
+
+    if (commandBlock)
       isAvailable = false;
 
-    return isAvailable? Registrador.get(reg.tipo, reg.pos) : undefined;
+    return isAvailable ? Registrador.get(reg.tipo, reg.pos) : undefined;
   }
 
-  static checkDest(reg:idRegistrador){
-    var isAvailable:boolean = true;
+  // Se o destino de alguma operação alguma unidade funcional for o mesmo da operação atual, ou caso haja escrito apos leitura, renomeie. Caso contrario, faz nd nao
+  static checkRename(reg: idRegistrador) {
+    var isAvailable: boolean = true;
 
     var dest = `${reg.tipo}${reg.pos}`;
     var commandBlock = ALU.janela.find(x => (x.v1 == dest || x.v2 == dest))
-    // commandBlock = commandBlock || StoreUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
-    // commandBlock = commandBlock || LoadUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
-    // commandBlock = commandBlock || BranchUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
+    || StoreUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
+    || LoadUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
+    || BranchUnit.janela.find(x => (x.v1 == dest || x.v2 == dest))
 
-    if(commandBlock)
+    if (commandBlock)
       isAvailable = false;
 
-    return isAvailable? Registrador.get(reg.tipo, reg.pos) : undefined;
+    return isAvailable ? reg : BufferReorder.renameRegister(reg); // por gambiarra, retorna o que foi passado de parametro caso esteja tudo em ordem, caso contrario, renomeie
   }
 
-  static pushToRChannel(comando:comando){
+  static addToBuffer(comando:comando, reg:idRegistrador){
+    let newDestination = OF.checkRename(reg);
+
+    let newEntry;
+    if(newDestination != reg){ // Caso seja necessária uma renomeação, crie uma nova entrada no buffer indicando a mesma
+      newEntry = new BufferEntry(newDestination, reg);
+      comando.dest = newDestination;
+    }
+    else{ // Caso contrário, nao vai fazer nada
+      newEntry = new BufferEntry(reg, reg);
+    }
+
+    BufferReorder.enqueue(newEntry);
+  }
+
+  static pushToRChannel(comando: comando) {
     switch ((Number(comando.Instrucao))) {
       //Store
       case 6:
@@ -279,7 +308,7 @@ class ALU {
     }
 
     var item = ALU.janela[0];
-    if (item && item.Vv1 != undefined && item.Vv2  != undefined) {
+    if (item && item.Vv1 != undefined && item.Vv2 != undefined) {
       this.executeULA(item);
     }
   }
@@ -352,9 +381,9 @@ class StoreUnit {
 
     var item = StoreUnit.janela[0];  // Seleciona o comando
 
-    if (item  && item.Vv1 !=undefined ) {
+    if (item && item.Vv1 != undefined) {
       item.ciclosAux++;
-      if(item.ciclosAux == item.ciclos)
+      if (item.ciclosAux == item.ciclos)
         StoreUnit.store(item)
     }
 
@@ -367,6 +396,7 @@ class StoreUnit {
     Memoria.store(item.Vv1, reg.offset, value); // Escreve o valor de v1 na memória
 
     item.exe = true; // Indica que a instrução finalizou sua fase de execução
+    item.destV = item.Vv1;
     WriteBack.writeBackItems.push(item);
   }
 }
@@ -381,9 +411,9 @@ class LoadUnit {
 
     var item = LoadUnit.janela[0]; // Seleciona o comando
 
-    if (item && item.Vv1 !=undefined && item.Vv1 !=undefined) {
+    if (item && item.Vv1 != undefined && item.Vv1 != undefined) {
       item.ciclosAux++;
-      if(item.ciclosAux == item.ciclos)
+      if (item.ciclosAux == item.ciclos)
         LoadUnit.load(item)
     }
 
@@ -402,47 +432,82 @@ class LoadUnit {
   }
 }
 
-class WriteBack{
-  static writeBackItems:comando[] = []
+class WriteBack {
+  static writeBackItems: comando[] = []
 
-  public static writeBack(){
+  public static writeBack() {
     WriteBack.writeBackItems.forEach(comando => {
-      ALU.janela.forEach(x => {
-        if(x.Vv1 == undefined && x.v1 == comando.dest){
-          x.Vv1 = comando.destV;
-        }
-
-        else if(x.Vv2 == undefined && x.v2 == comando.dest){
-          x.Vv2 = comando.destV;
-        }
-      })
-
-      StoreUnit.janela.forEach(x => {
-        if(x.Vv1 == undefined && x.dest == comando.dest){
-          x.Vv1 = comando.destV;
-        }
-      }) 
-      
-      LoadUnit.janela.forEach(x => {
-        if(x.Vv1 == undefined && x.v1 == comando.dest){
-          x.Vv1 = comando.destV;
-        }
-      }) 
+      if(!comando.wb){
+        ALU.janela.forEach(x => {
+          if (x.Vv1 == undefined && x.v1 == comando.dest) {
+            x.Vv1 = comando.destV;
+          }
+  
+          else if (x.Vv2 == undefined && x.v2 == comando.dest) {
+            x.Vv2 = comando.destV;
+          }
+        })
+  
+        StoreUnit.janela.forEach(x => {
+          if (x.Vv1 == undefined && x.dest == comando.dest) {
+            x.Vv1 = comando.destV;
+          }
+        })
+  
+        LoadUnit.janela.forEach(x => {
+          if (x.Vv1 == undefined && x.v1 == comando.dest) {
+            x.Vv1 = comando.destV;
+          }
+        })
+      }
 
       comando.wb = true;
-    })    
+    })
   }
 }
 
-class BufferReorder{
-  private static regQueue:idRegistrador[] // talvez uma nova classe pq vai ter renomeamento
+class BufferReorder {
+  static bufferQueue: BufferEntry[]
 
-  public static enqueue(reg:idRegistrador){
-    this.regQueue.push(reg);
+  public static enqueue(reg: BufferEntry) {
+    this.bufferQueue.push(reg);
   }
 
-  public static
+  public static update(reg: Registrador) {
+    let i = BufferReorder.bufferQueue.findIndex(x => x.rename == reg.id);
+    BufferReorder.bufferQueue[i].value = reg.valor
+    BufferReorder.bufferQueue[i].rename = BufferReorder.bufferQueue[i].originalName
+  }
 
+  public static renameRegister(dest:idRegistrador){
+    let rename = new BufferEntry(Registrador.getFirstRenameAvailable(), `${dest.tipo}${dest.pos}`)
+    return rename.rename;
+  }
+
+  public static writeToRDB() {
+    let canWrite: boolean = true;
+
+    while (canWrite) {
+      let item = BufferReorder.bufferQueue[0]
+
+      if (item.originalName == item.rename && item.value) {
+        let reg = new idRegistrador(item.originalName)
+        Registrador.set(reg, item.value)
+        BufferReorder.bufferQueue.shift()
+      }
+      else {
+        canWrite = false; // FIFO, se o primeiro nao pode sair, ngm pode
+      }
+    }
+  }
+}
+
+class BufferEntry {
+  constructor(
+    public rename, 
+    public originalName,
+    public value?:number, 
+  ) {}
 }
 
 class Instrucao {
@@ -484,6 +549,8 @@ class Instrucao {
 class Registrador {
   public static enderecosR: Registrador[];
   public static enderecosF: Registrador[];
+  public static enderecosRN: Registrador[];
+
   constructor(
     public id,
     public valor: number,
@@ -492,18 +559,28 @@ class Registrador {
   public static preencher() {
     Registrador.enderecosR = [];
     Registrador.enderecosF = [];
+    Registrador.enderecosRN = [];
 
     for (let i = 0; i < 32; i++) {
       var int = new Registrador(`R${i}`, 0, 0)
       var float = new Registrador(`F${i}`, 0.0, 0)
+      var rename = new Registrador(`R${String.fromCharCode(65 + i)}`, 0, -1)
 
       Registrador.enderecosR.push(int);
       Registrador.enderecosF.push(float);
+      Registrador.enderecosRN.push(rename);
     }
   }
 
   public static get(tipo, pos) {
     return Registrador[`enderecos${tipo}`][pos].valor
+  }
+
+  static getFirstRenameAvailable(): any {
+    let firstAvailable = this.enderecosRN.find(x => x.qi == -1)
+    firstAvailable.qi = 0;
+
+    return firstAvailable.id;
   }
 
   public static set(reg: idRegistrador, value) {
