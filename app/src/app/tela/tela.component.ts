@@ -90,12 +90,14 @@ export class TelaComponent implements OnInit {
       x.wb = false;
       x.dec = false;
       x.ciclosAux =0;
+      x.naoExecutar = false;
     })
     comando.listaComandos2.forEach(x=> {
       x.exe = false;
       x.wb = false;
       x.dec = false;
       x.ciclosAux =0;
+      x.naoExecutar = false;
     })
     localStorage.setItem('listacomandos', JSON.stringify(comando.listaComandos))
     localStorage.setItem('listacomandos2', JSON.stringify(comando.listaComandos2))
@@ -457,12 +459,12 @@ class BranchUnit {
       item.exe = true;
     }
     if(BranchUnit.skipCount > 0 ){
-      var itens = comando.listaComandos.filter(x => x.exe == false && x.naoExecutar == false);
-      var max = BranchUnit.skipCount > itens.length? itens.length: BranchUnit.skipCount 
-      for(let i =0;i < max; i++){
-        itens[i].naoExecutar = true;
+      var i = comando.listaComandos.findIndex(x => x== item);
+      for(let j = i+1; j<  comando.listaComandos.length && BranchUnit.skipCount>0; j++){
+        comando.listaComandos[j].naoExecutar = true;
         BranchUnit.skipCount--;
       }
+
     }
     BufferReorder.update(item,'dest');
   }
