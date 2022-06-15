@@ -85,6 +85,20 @@ export class TelaComponent implements OnInit {
     }
   }
   Reset(){
+    comando.listaComandos.forEach(x=> {
+      x.exe = false;
+      x.wb = false;
+      x.dec = false;
+      x.ciclosAux =0;
+    })
+    comando.listaComandos2.forEach(x=> {
+      x.exe = false;
+      x.wb = false;
+      x.dec = false;
+      x.ciclosAux =0;
+    })
+    localStorage.setItem('listacomandos', JSON.stringify(comando.listaComandos))
+    localStorage.setItem('listacomandos2', JSON.stringify(comando.listaComandos2))
     location.reload()
   }
   limpar() {
@@ -303,6 +317,11 @@ class OF {
     newEntry = new BufferEntry(reg, reg);
     BufferReorder.enqueue(newEntry);
   }
+  static addToBufferBranch(comando:comando, reg:idRegistrador){
+    let newEntry;
+    newEntry = new BufferEntry(reg, reg,comando.Vv1);
+    BufferReorder.enqueue(newEntry);
+  }
   
   static pushToRChannel(comando: comando) {
     switch ((Number(comando.Instrucao))) {
@@ -344,8 +363,14 @@ class ALU {
   public static execute() {
     let tam = ALU.janela.length
     for (let i = 0; i < tam; i++) {
-      if (ALU.janela[i] && (ALU.janela[i].exe == true || ALU.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
+
+      if (ALU.janela[i] && (ALU.janela[i].exe == true || ALU.janela[i].naoExecutar)){
         ALU.janela.splice(i, 1);
+        i--
+      }
+        
+         // Se item já tiver sido executado, remova-o da lista de comandos
+       
     }
 
     for(let i = 0; i< 2; i++){
@@ -372,7 +397,7 @@ class ALU {
         item.destV = ALU.DIV(item.dest, item.Vv1, item.Vv2)
         break;
     }
-
+    console.log(item)
     item.exe = true;
     BufferReorder.update(item,'dest');
     WriteBack.writeBackItems.push(item);
@@ -413,8 +438,10 @@ class BranchUnit {
   public static execute() {
     let tam = BranchUnit.janela.length
     for (let i = 0; i < tam; i++) {
-      if (BranchUnit.janela[i] && (BranchUnit.janela[i].exe == true || BranchUnit.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
+      if (BranchUnit.janela[i] && (BranchUnit.janela[i].exe == true || BranchUnit.janela[i].naoExecutar)){ // Se item já tiver sido executado, remova-o da lista de comandos
         BranchUnit.janela.splice(i, 1);
+        i--
+      }
     }
 
   
@@ -430,13 +457,14 @@ class BranchUnit {
       item.exe = true;
     }
     if(BranchUnit.skipCount > 0 ){
-      var itens = comando.listaComandos.filter(x => x.exe == false);
+      var itens = comando.listaComandos.filter(x => x.exe == false && x.naoExecutar == false);
       var max = BranchUnit.skipCount > itens.length? itens.length: BranchUnit.skipCount 
       for(let i =0;i < max; i++){
         itens[i].naoExecutar = true;
         BranchUnit.skipCount--;
       }
     }
+    BufferReorder.update(item,'dest');
   }
   public static reduceCounter(flag=false){
     if(BranchUnit.skipCount !=0){
@@ -456,8 +484,10 @@ class StoreUnit {
   public static execute() {
     let tam = StoreUnit.janela.length
     for (let i = 0; i < tam; i++) {
-      if (StoreUnit.janela[i] && (StoreUnit.janela[i].exe == true || StoreUnit.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
+      if (StoreUnit.janela[i] && (StoreUnit.janela[i].exe == true || StoreUnit.janela[i].naoExecutar)){ // Se item já tiver sido executado, remova-o da lista de comandos
         StoreUnit.janela.splice(i, 1);
+        i--
+      }
     }
 
     var item = StoreUnit.janela[0];  // Seleciona o comando
@@ -488,8 +518,10 @@ class LoadUnit {
   public static execute() {
     let tam = LoadUnit.janela.length
     for (let i = 0; i < tam; i++) {
-      if (LoadUnit.janela[i] && (LoadUnit.janela[i].exe == true || LoadUnit.janela[i].naoExecutar)) // Se item já tiver sido executado, remova-o da lista de comandos
+      if (LoadUnit.janela[i] && (LoadUnit.janela[i].exe == true || LoadUnit.janela[i].naoExecutar)){ // Se item já tiver sido executado, remova-o da lista de comandos
         LoadUnit.janela.splice(i, 1);
+        i--
+      }
     }
 
     var item = LoadUnit.janela[0]; // Seleciona o comando
@@ -559,7 +591,6 @@ class WriteBack {
           else if (x.destV == undefined && x.dest == comando.dest) { 
               x.destV = comando.destV;
           }
-          BranchUnit.reduceCounter(true)
           
           
         })
